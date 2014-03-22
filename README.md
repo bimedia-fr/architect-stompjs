@@ -36,7 +36,7 @@ Add a `ws` object to configure a websocket to the stomp server.
 Add a `headers` object to configure connection properties see [stompjs connection](http://jmesnil.net/stomp-websocket/doc/#connection).
 
 #### queues
-Add a queues object to configure queues alias avaliable in you application.
+Add a queues object to configure queues alias avaliable in your application.
 
 
 ### Usage
