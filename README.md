@@ -93,7 +93,7 @@ module.exports = function setup(options, imports, register) {
 
 ### Using Queues Alias
 
-Configure you alias in the architect `config.js` file :
+Configure your alias in the architect `config.js` file :
 ```js
 {
   "packagePath": "architect-log4js",
