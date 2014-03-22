@@ -1,0 +1,34 @@
+{
+  "name": "architect-stompjs",
+  "version": "0.0.1",
+  "description": "nodejs architect service that provide messaging based on stompjs.",
+  "main": "src/index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "vows --spec test/test-*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/bimedia-fr/architect-stompjs.git"
+  },
+  "keywords": [
+    "architect",
+    "stompjs"
+  ],
+  "author": "jerome creignou",
+  "license": "Apache License V2",
+  "bugs": {
+    "url": "https://github.com/bimedia-fr/architect-stompjs/issues"
+  },
+  "devDependencies": {
+    "vows": "~0.7.0"
+  },
+  "dependencies": {
+    "stompjs": "~2.3.1"
+  },
+    "plugin": {
+        "provides": ["stomp"]
+    }
+}
