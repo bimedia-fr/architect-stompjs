@@ -2,10 +2,33 @@
 "use strict";
 var Stomp = require('stompjs');
 
+function getClient(options) {
+    var client = options.tcp ? Stomp.overTCP(options.tcp.host || 'localhost', options.tcp.port || 61613) : Stomp.overWS(options.ws.url);
+    var heartbeat = options.heartbeat || {};
+    client.heartbeat.outgoing = heartbeat.outgoing || 2000;
+    client.heartbeat.incoming = heartbeat.incoming || 2000;
+    return client;
+}
+
 //### Stompjs Module
 module.exports = function setup(options, imports, register) {
 
-    var client = options.tcp ? Stomp.overTCP(options.tcp.host || 'localhost', options.tcp.port || 61613) : Stomp.overWS(options.ws.url);
+    var log = imports.log.getLogger('stompjs');
+
+    var service = {
+        client: getClient(options),
+        onDestruct: function (callback) {
+            log.info('closing Stomp service');
+            service.client.disconnect(callback);
+        },
+        connectCounter : 1,
+        respawnDelay : function () {
+            return Math.pow(service.connectCounter++, 2) * 100;
+        },
+        respawnScheduled : false,
+        registered : false,
+        connected : false
+    };
 
     function connect(client, cb) {
         client.connect(options.headers || {}, function () {
@@ -14,13 +37,6 @@ module.exports = function setup(options, imports, register) {
             cb(err);
         });
     }
-
-    var service = {
-        client: client,
-        onDestruct: function (callback) {
-            service.client.disconnect(callback);
-        }
-    };
 
     function buildQueues(config) {
         var res = {};
@@ -39,10 +55,46 @@ module.exports = function setup(options, imports, register) {
 
     service.queues = buildQueues(options.queues);
 
-    connect(client, function (err) {
-        if (err) {
-            return register(err);
+    var reconnect = function () {
+        log.info('trying to reconnect...');
+        service.respawnScheduled = false;
+        if (service.connected) {
+            return;
         }
+        service.client = getClient(options);
+        connect(service.client, function (err) {
+            if (err) {
+                log.error('connection error retrying ' + err);
+                if (!service.connected && service.connectCounter < 20 && !service.respawnScheduled) {
+                    setTimeout(reconnect, service.respawnDelay());
+                    service.respawnScheduled = true;
+                }
+                return;
+            }
+            service.connectCounter = 1;
+            service.connected = true;
+            log.info('connected');
+        });
+    };
+
+    connect(service.client, function (err) {
+        if (err) {
+            service.connected = false;
+            if (!service.registered) {
+                // stop registration process
+                return register(err);
+            }
+            log.error('connection error ' + err);
+            // connection lost : try to reconnect
+            if (!service.respawnScheduled) {
+                setTimeout(reconnect, service.respawnDelay());
+                service.respawnScheduled = true;
+            }
+            return;
+        }
+        service.registered = true;
+        service.connected = true;
         register(null, {stomp: service});
+        log.info('Stomp service registered');
     });
 };

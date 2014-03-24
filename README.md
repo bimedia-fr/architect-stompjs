@@ -2,6 +2,7 @@ architect-stompjs
 =================
 
 Expose a [stompjs](https://github.com/jmesnil/stomp-websocket) client as an architect service.
+This module provides auto-reconnect functionnality.
 
 ### Installation
 
@@ -58,11 +59,15 @@ architect.createApp(config, function (err, app) {
 });
 ```
 
+This module require [architect-log4js](https://github.com/bimedia-fr/architect-log4js) as logging service.
+
 Configure sptomjs service with `config.js` :
 
 ```js
 module.exports = [{
     packagePath: "architect-stompjs"
+}{
+    packagePath: "architect-log4js"
 }, './routes'];
 ```
 
