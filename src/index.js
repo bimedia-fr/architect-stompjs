@@ -13,27 +13,32 @@ function getClient(options) {
 //### Stompjs Module
 module.exports = function setup(options, imports, register) {
 
-    var log = imports.log.getLogger('stompjs');
+    var log = imports.log.getLogger('stompjs'), iv;
+
+    function cleanUp() {
+        if (iv) {
+            clearInterval(iv);
+        }
+        iv = null;
+    }
 
     var service = {
         client: getClient(options),
         onDestruct: function (callback) {
             log.info('closing Stomp service');
             service.client.disconnect(callback);
+            cleanUp();
         },
-        connectCounter : 1,
-        respawnDelay : function () {
-            return Math.pow(service.connectCounter++, 2) * 100;
-        },
-        respawnScheduled : false,
         registered : false,
         connected : false
     };
 
-    function connect(client, cb) {
-        client.connect(options.headers || {}, function () {
+    function connect(cb) {
+        service.client.connect(options.headers || {}, function () {
+            service.connected = true;
             cb(null, cb);
         }, function errorcb(err) {
+            service.connected = false;
             cb(err);
         });
     }
@@ -55,45 +60,35 @@ module.exports = function setup(options, imports, register) {
 
     service.queues = buildQueues(options.queues);
 
+    var errorHandler = function errorHandler(err, handler) {
+        log.error('connection error retrying ' + err);
+        if (!iv) {
+            // connection lost : try to reconnect
+            iv = setInterval(handler, 10 * 1000);
+        }
+    };
+
     var reconnect = function () {
         log.info('trying to reconnect...');
-        service.respawnScheduled = false;
-        if (service.connected) {
-            return;
-        }
         service.client = getClient(options);
-        connect(service.client, function (err) {
+        connect(function (err) {
             if (err) {
-                log.error('connection error retrying ' + err);
-                if (!service.connected && service.connectCounter < 20 && !service.respawnScheduled) {
-                    setTimeout(reconnect, service.respawnDelay());
-                    service.respawnScheduled = true;
-                }
-                return;
+                return errorHandler(err, reconnect);
             }
-            service.connectCounter = 1;
-            service.connected = true;
+            cleanUp();
             log.info('connected');
         });
     };
 
-    connect(service.client, function (err) {
+    connect(function (err) {
         if (err) {
-            service.connected = false;
             if (!service.registered) {
                 // stop registration process
                 return register(err);
             }
-            log.error('connection error ' + err);
-            // connection lost : try to reconnect
-            if (!service.respawnScheduled) {
-                setTimeout(reconnect, service.respawnDelay());
-                service.respawnScheduled = true;
-            }
-            return;
+            return errorHandler(err, reconnect);
         }
         service.registered = true;
-        service.connected = true;
         register(null, {stomp: service});
         log.info('Stomp service registered');
     });
