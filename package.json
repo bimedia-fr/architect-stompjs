@@ -1,6 +1,6 @@
 {
   "name": "architect-stompjs",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "nodejs architect service that provide messaging based on stompjs.",
   "main": "src/index.js",
   "directories": {
