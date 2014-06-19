@@ -90,7 +90,7 @@ Eventually use the `stomp` service in your app :
 
 ```js
 module.exports = function setup(options, imports, register) {
-    var client = imports.stomp; //get default logger
+    var client = imports.stomp; //get stomp client
     client.send('/queue/myqueue', {}, 'application has started.');
     register();
 };
@@ -115,7 +115,7 @@ Configure your alias in the architect `config.js` file :
 Now you can send and recieve messages with the queue alias :
 ```js
 module.exports = function setup(options, imports, register) {
-    var client = imports.stomp; //get default logger
+    var client = imports.stomp; //get stomp client
     var myqueue = client.queues.myqueue;
     myqueue.send({}, 'application has started.');
     register();
