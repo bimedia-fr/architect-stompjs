@@ -12,7 +12,7 @@ npm install --save architect-stompjs
 ### Config Format
 ```js
 {
-  "packagePath": "architect-log4js",
+  "packagePath": "architect-stompjs",
   tcp: {
     host: 'localhost',
     port: 61613
