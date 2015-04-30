@@ -18,7 +18,7 @@
     "stompjs"
   ],
   "author": "jerome creignou",
-  "license": "Apache License V2",
+  "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/bimedia-fr/architect-stompjs/issues"
   },
