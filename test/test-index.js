@@ -13,7 +13,7 @@ var config = {
         'connectHeaders': {
             'host': '/',
             'heart-beat': '5000,5000',
-            'client-id': 'opossum'
+            'client-id': 'myid'
         }
     }],
     topics: {
