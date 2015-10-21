@@ -23,6 +23,12 @@ var config = {
             'activemq.retroactive' : true,
             persistent: true
         }
+    },
+    queues: {
+        stores : {
+            'destination': '/queue/bimedia.stores.topic.preprod',
+            'ack': 'client'
+        }
     }
 };
 
@@ -45,6 +51,30 @@ vows.describe("Architect Stomp Client service").addBatch({
                 return service.stomp.topics;
             },
             'contains a `stores` topic' : function (topics) {
+                assert.ok(topics.stores);
+            },
+            'have a `send` method': function (topics) {
+                assert.ok(topics.stores.send);
+                assert.ok(typeof topics.stores.send == 'function');
+            },
+            'have a `subscribe` method': function (topics) {
+                assert.ok(topics.stores.subscribe);
+                assert.ok(typeof topics.stores.subscribe == 'function');
+            },
+            'have a `begin` method': function (topics) {
+                assert.ok(topics.stores.begin);
+                assert.ok(typeof topics.stores.begin == 'function');
+            },
+            'have a `close` method': function (topics) {
+                assert.ok(topics.stores.close);
+                assert.ok(typeof topics.stores.close == 'function');
+            }
+        },
+        'queues ': {
+            topic: function (service) {
+                return service.stomp.queues;
+            },
+            'contains a `stores` queue' : function (topics) {
                 assert.ok(topics.stores);
             },
             'have a `send` method': function (topics) {
