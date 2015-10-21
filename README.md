@@ -1,44 +1,39 @@
 architect-stompjs
 =================
 
-Expose a [stompjs](https://github.com/jmesnil/stomp-websocket) client as an architect service.
-This module provides auto-reconnect functionnality.
+Expose a [stompit](https://www.npmjs.com/package/stompit) client as an [architect](https://www.npmjs.com/package/architect) service.
 
 ### Installation
 
 ```sh
 npm install --save architect-stompjs
 ```
+
 ### Config Format
+
 ```js
 {
   "packagePath": "architect-stompjs",
-  tcp: {
+  config: [{
     host: 'localhost',
     port: 61613
-  }
+  }]
 }
 ```
 
 ### Supported config elements
 
-#### tcp
-Add a `tcp` object to configure a tcp connection to the stomp server.
+#### config 
 
-* `host` : is stomp server hostname, default is *localhost*
-* `port` : is stomp server port, default is *61613*
-
-#### ws
-Add a `ws` object to configure a websocket to the stomp server.
-
-* `url` : is websocket server url.
-
-#### headers
-Add a `headers` object to configure connection properties see [stompjs connection](http://jmesnil.net/stomp-websocket/doc/#connection).
+Config element is an array of servers as in [stompit connection servers](http://gdaws.github.io/node-stomp/api/connect-failover/).
 
 #### queues
-Add a queues object to configure queues alias avaliable in your application.
 
+Add a `queues` object to configure queues avaliable in your application.
+
+#### topics
+
+Add a `topics` object to configure topics avaliable in your application.
 
 ### Usage
 
@@ -59,9 +54,9 @@ architect.createApp(config, function (err, app) {
 });
 ```
 
-This module require [architect-log4js](https://github.com/bimedia-fr/architect-log4js) as logging service.
+This module require [architect-log4js](https://github.com/bimedia-fr/architect-log4js) or equivalent as logging service.
 
-Configure sptomjs service with `config.js` :
+Configure sptom service with `config.js` :
 
 ```js
 module.exports = [{
@@ -90,8 +85,8 @@ Eventually use the `stomp` service in your app :
 
 ```js
 module.exports = function setup(options, imports, register) {
-    var client = imports.stomp; //get stomp client
-    client.send('/queue/myqueue', {}, 'application has started.');
+    var stomp = imports.stomp; //get stomp client
+    stomp.channel.send('/queue/myqueue', {}, 'application has started.');
     register();
 };
 ```
@@ -99,25 +94,30 @@ module.exports = function setup(options, imports, register) {
 ### Using Queues Alias
 
 Configure your alias in the architect `config.js` file :
+
 ```js
 {
   "packagePath": "architect-log4js",
-  tcp: {
+  config: [{
     host: 'localhost',
     port: 61613
-  },
+  }],
   queues: {
-    'myqueue' : '/queue/my.queue.name.is.super.long'
+    'myqueue' : {
+        'destination': '/queue/my.queue.name.is.super.long'
+        'ack': 'client',
+    }
   }
 }
 ```
 
 Now you can send and recieve messages with the queue alias :
+
 ```js
 module.exports = function setup(options, imports, register) {
     var client = imports.stomp; //get stomp client
     var myqueue = client.queues.myqueue;
-    myqueue.send({}, 'application has started.');
+    myqueue.send('application has started.');
     register();
 };
 ```
