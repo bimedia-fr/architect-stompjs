@@ -33,7 +33,7 @@ module.exports = function setup(options, imports, register) {
             var conf = confs[curr];
             prev[curr] = {
                 send: function (headers, body, cb) {
-                    if (typeof body == 'function') {
+                    if (typeof body == 'function' || !body) {
                         body = headers;
                         cb = body;
                         headers = {};
