@@ -1,95 +1,77 @@
 /*jslint node : true, nomen: true, plusplus: true, vars: true, eqeq: true,*/
 "use strict";
-var Stomp = require('stompjs');
+var stompit = require('stompit'),
+    oassign = require('object-assign');
 
-function getClient(options) {
-    var client = options.tcp ? Stomp.overTCP(options.tcp.host || 'localhost', options.tcp.port || 61613) : Stomp.overWS(options.ws.url);
-    var heartbeat = options.heartbeat || {};
-    client.heartbeat.outgoing = heartbeat.outgoing || 2000;
-    client.heartbeat.incoming = heartbeat.incoming || 2000;
-    return client;
-}
 
 //### Stompjs Module
 module.exports = function setup(options, imports, register) {
 
-    var log = imports.log.getLogger('stompjs'), iv;
-
-    function cleanUp() {
-        if (iv) {
-            clearInterval(iv);
-        }
-        iv = null;
-    }
-
-    var service = {
-        client: getClient(options),
-        onDestruct: function (callback) {
-            log.info('closing Stomp service');
-            service.client.disconnect(callback);
-            cleanUp();
-        },
-        registered : false,
-        connected : false
+    var log = imports.log.getLogger('stomp'),
+        config = options.config;
+    var servers = Array.isArray(config) ? config : [];
+    var recoOpts = config.reconnectOptions || {
+        'maxReconnects': 10
     };
 
-    function connect(cb) {
-        service.client.connect(options.headers || {}, function () {
-            service.connected = true;
-            cb(null, cb);
-        }, function errorcb(err) {
-            service.connected = false;
-            cb(err);
-        });
-    }
+    var connections = new stompit.ConnectFailover(servers, recoOpts);
 
-    function buildQueues(config) {
-        var res = {};
-        Object.keys(config || {}).forEach(function (key) {
-            res[key] = {
-                send : function (headers, message) {
-                    service.client.send(config[key], headers, message);
+    // Log connection events
+    connections.on('connecting', function (connector) {
+        var address = connector.serverProperties.remoteAddress.transportPath;
+        log.info('Connecting to', address);
+    });
+
+    connections.on('error', function (error) {
+        var connectArgs = error.connectArgs;
+        var address = connectArgs.host + ':' + connectArgs.port;
+        log.warn('Connection error to', address, ':', error.message);
+    });
+
+    function destinations(channel, confs) {
+        return Object.keys(confs).reduce(function (prev, curr) {
+            var conf = confs[curr];
+            prev[curr] = {
+                send: function (headers, body, cb) {
+                    if (typeof body == 'function') {
+                        body = headers;
+                        cb = body;
+                        headers = {};
+                    }
+                    channel.send(oassign([conf, headers]), body, cb);
                 },
-                subscribe : function (callback, headers) {
-                    service.client.subscribe(config[key], callback, headers);
-                }
+                subscribe : function (headers, cb) {
+                    if (typeof headers == 'function') {
+                        cb = headers;
+                        headers = {};
+                    }
+                    channel.subscribe(oassign([conf, headers]), cb);
+                },
+                begin : channel.begin.bind(channel),
+                close : channel.close.bind(channel)
             };
-        });
-        return res;
+            return prev;
+        }, {});
     }
 
-    service.queues = buildQueues(options.queues);
+    var channelFactory = new stompit.ChannelFactory(connections);
 
-    var errorHandler = function errorHandler(err, handler) {
-        log.error('connection error retrying ' + err);
-        if (!iv) {
-            // connection lost : try to reconnect
-            iv = setInterval(handler, 10 * 1000);
+    channelFactory.channel(function (error, channel) {
+        if (error) {
+            log.error('unable to create stomp channel', error.message);
+            return register(error);
         }
-    };
 
-    var reconnect = function () {
-        log.info('trying to reconnect...');
-        service.client = getClient(options);
-        connect(function (err) {
-            if (err) {
-                return errorHandler(err, reconnect);
+        register(null, {
+            stomp: {
+                channel : channel,
+                queues : destinations(channel, options.queues || {}),
+                topics : destinations(channel, options.topics || {})
+            },
+            onDestroy: function (callback) {
+                channel.close();
+                return callback && callback();
             }
-            cleanUp();
-            log.info('connected');
         });
-    };
-
-    connect(function (err) {
-        if (err) {
-            if (!service.registered) {
-                // stop registration process
-                return register(err);
-            }
-            return errorHandler(err, reconnect);
-        }
-        service.registered = true;
-        register(null, {stomp: service});
-        log.info('Stomp service registered');
     });
 };
