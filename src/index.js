@@ -38,14 +38,14 @@ module.exports = function setup(options, imports, register) {
                         cb = body;
                         headers = {};
                     }
-                    channel.send(oassign([conf, headers]), body, cb);
+                    channel.send(oassign(conf, headers), body, cb);
                 },
                 subscribe : function (headers, cb) {
                     if (typeof headers == 'function') {
                         cb = headers;
                         headers = {};
                     }
-                    channel.subscribe(oassign([conf, headers]), cb);
+                    channel.subscribe(oassign(conf, headers), cb);
                 },
                 begin : channel.begin.bind(channel),
                 close : channel.close.bind(channel)
