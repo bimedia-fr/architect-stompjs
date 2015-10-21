@@ -26,6 +26,7 @@
     "vows": "~0.7.0"
   },
   "dependencies": {
+    "object-assign": "^4.0.1",
     "stompit": "^0.22.0"
   },
   "plugin": {
