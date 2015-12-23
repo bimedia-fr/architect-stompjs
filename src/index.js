@@ -65,8 +65,8 @@ module.exports = function setup(options, imports, register) {
         register(null, {
             stomp: {
                 channel : channel,
-                queues : destinations(channel, options.queues || {}),
-                topics : destinations(channel, options.topics || {})
+                queues : destinations(channel, options.queues || {}),
+                topics : destinations(channel, options.topics || {})
             },
             onDestroy: function (callback) {
                 channel.close();
