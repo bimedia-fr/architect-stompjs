@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "object-assign": "^4.0.1",
-    "stompit": "^0.22.0"
+    "stompit": "0.25.0"
   },
   "plugin": {
     "consumes": [
