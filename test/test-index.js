@@ -32,6 +32,13 @@ var config = {
     }
 };
 
+function assertFunc(name) {
+    return function (topics) {
+        assert.ok(topics.stores[name]);
+        assert.ok(typeof topics.stores[name] == 'function');
+    };
+}
+
 vows.describe("Architect Stomp Client service").addBatch({
     'A stompjs service ': {
         topic: function () {
@@ -53,22 +60,12 @@ vows.describe("Architect Stomp Client service").addBatch({
             'contains a `stores` topic' : function (topics) {
                 assert.ok(topics.stores);
             },
-            'have a `send` method': function (topics) {
-                assert.ok(topics.stores.send);
-                assert.ok(typeof topics.stores.send == 'function');
-            },
-            'have a `subscribe` method': function (topics) {
-                assert.ok(topics.stores.subscribe);
-                assert.ok(typeof topics.stores.subscribe == 'function');
-            },
-            'have a `begin` method': function (topics) {
-                assert.ok(topics.stores.begin);
-                assert.ok(typeof topics.stores.begin == 'function');
-            },
-            'have a `close` method': function (topics) {
-                assert.ok(topics.stores.close);
-                assert.ok(typeof topics.stores.close == 'function');
-            }
+            'have a `send` method': assertFunc('send'),
+            'have a `subscribe` method': assertFunc('subscribe'),
+            'have a `begin` method': assertFunc('begin'),
+            'have a `close` method': assertFunc('close'),
+            'have a `ack` method': assertFunc('ack'),
+            'have a `nack` method': assertFunc('nack')
         },
         'queues ': {
             topic: function (service) {
@@ -77,22 +74,12 @@ vows.describe("Architect Stomp Client service").addBatch({
             'contains a `stores` queue' : function (topics) {
                 assert.ok(topics.stores);
             },
-            'have a `send` method': function (topics) {
-                assert.ok(topics.stores.send);
-                assert.ok(typeof topics.stores.send == 'function');
-            },
-            'have a `subscribe` method': function (topics) {
-                assert.ok(topics.stores.subscribe);
-                assert.ok(typeof topics.stores.subscribe == 'function');
-            },
-            'have a `begin` method': function (topics) {
-                assert.ok(topics.stores.begin);
-                assert.ok(typeof topics.stores.begin == 'function');
-            },
-            'have a `close` method': function (topics) {
-                assert.ok(topics.stores.close);
-                assert.ok(typeof topics.stores.close == 'function');
-            }
+            'have a `send` method': assertFunc('send'),
+            'have a `subscribe` method': assertFunc('subscribe'),
+            'have a `begin` method': assertFunc('begin'),
+            'have a `close` method': assertFunc('close'),
+            'have a `ack` method': assertFunc('ack'),
+            'have a `nack` method': assertFunc('nack')
         }
     }
 }).exportTo(module);

@@ -48,7 +48,9 @@ module.exports = function setup(options, imports, register) {
                     channel.subscribe(oassign(conf, headers), cb);
                 },
                 begin : channel.begin.bind(channel),
-                close : channel.close.bind(channel)
+                close : channel.close.bind(channel),
+                ack : channel.ack.bind(channel),
+                nack : channel.nack.bind(channel),
             };
             return prev;
         }, {});
