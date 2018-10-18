@@ -28,7 +28,7 @@ module.exports = function setup(options, imports, register) {
         log.warn('Connection error to', address, ':', error.message);
     });
 
-    function destinations(channel, confs) {
+    function destinations(channelFactory, confs) {
         return Object.keys(confs).reduce(function (prev, curr) {
             var conf = confs[curr];
             prev[curr] = {
@@ -38,19 +38,29 @@ module.exports = function setup(options, imports, register) {
                         cb = body;
                         headers = {};
                     }
-                    channel.send(oassign(conf, headers), body, cb);
+                    channelFactory.channel((err, channel) => {
+                        if (err) {
+                            log.error('unable to create channel', err);
+                            return done(err);
+                        }
+                        channel.send(oassign(conf, headers), body, cb);
+                    });
                 },
-                subscribe : function (headers, cb) {
+                subscribe : function (headers, done) {
                     if (typeof headers == 'function') {
-                        cb = headers;
+                        done = headers;
                         headers = {};
                     }
-                    channel.subscribe(oassign(conf, headers), cb);
-                },
-                begin : channel.begin.bind(channel),
-                close : channel.close.bind(channel),
-                ack : channel.ack.bind(channel),
-                nack : channel.nack.bind(channel),
+                    channelFactory.channel((err, channel) => {
+                        if (err) {
+                            log.error('unable to create channel', err);
+                            return done(err);
+                        }
+                        channel.subscribe(oassign(conf, headers), (err, message, subscription) => {
+                            done(err, message, channel, subscription);
+                        });
+                    });
+                }
             };
             return prev;
         }, {});
@@ -58,22 +68,14 @@ module.exports = function setup(options, imports, register) {
 
     var channelFactory = new stompit.ChannelFactory(connections);
 
-    channelFactory.channel(function (error, channel) {
-        if (error) {
-            log.error('unable to create stomp channel', error.message);
-            return register(error);
+    register(null, {
+        stomp: {
+            queues : destinations(channelFactory, options.queues || {}),
+            topics : destinations(channelFactory, options.topics || {})
+        },
+        onDestroy: function (callback) {
+            channelFactory.close();
+            return callback && callback();
         }
-
-        register(null, {
-            stomp: {
-                channel : channel,
-                queues : destinations(channel, options.queues || {}),
-                topics : destinations(channel, options.topics || {})
-            },
-            onDestroy: function (callback) {
-                channel.close();
-                return callback && callback();
-            }
-        });
     });
 };

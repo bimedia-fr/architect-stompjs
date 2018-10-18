@@ -44,9 +44,6 @@ vows.describe("Architect Stomp Client service").addBatch({
         topic: function () {
             return stomp(config, {log : logger}, this.callback);
         },
-        'has a `channel` object ': function (service) {
-            assert.ok(service.stomp.channel);
-        },
         'has a `topics` object ': function (service) {
             assert.ok(service.stomp.topics);
         },
@@ -61,11 +58,7 @@ vows.describe("Architect Stomp Client service").addBatch({
                 assert.ok(topics.stores);
             },
             'have a `send` method': assertFunc('send'),
-            'have a `subscribe` method': assertFunc('subscribe'),
-            'have a `begin` method': assertFunc('begin'),
-            'have a `close` method': assertFunc('close'),
-            'have a `ack` method': assertFunc('ack'),
-            'have a `nack` method': assertFunc('nack')
+            'have a `subscribe` method': assertFunc('subscribe')
         },
         'queues ': {
             topic: function (service) {
@@ -75,11 +68,7 @@ vows.describe("Architect Stomp Client service").addBatch({
                 assert.ok(topics.stores);
             },
             'have a `send` method': assertFunc('send'),
-            'have a `subscribe` method': assertFunc('subscribe'),
-            'have a `begin` method': assertFunc('begin'),
-            'have a `close` method': assertFunc('close'),
-            'have a `ack` method': assertFunc('ack'),
-            'have a `nack` method': assertFunc('nack')
+            'have a `subscribe` method': assertFunc('subscribe')
         }
     }
 }).exportTo(module);
