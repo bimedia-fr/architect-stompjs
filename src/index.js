@@ -32,10 +32,10 @@ module.exports = function setup(options, imports, register) {
         return Object.keys(confs).reduce(function (prev, curr) {
             var conf = confs[curr];
             prev[curr] = {
-                send: function (headers, body, cb) {
+                send: function (headers, body, done) {
                     if (typeof body == 'function' || !body) {
                         body = headers;
-                        cb = body;
+                        done = body;
                         headers = {};
                     }
                     channelFactory.channel((err, channel) => {
@@ -43,7 +43,7 @@ module.exports = function setup(options, imports, register) {
                             log.error('unable to create channel', err);
                             return done(err);
                         }
-                        channel.send(oassign(conf, headers), body, cb);
+                        channel.send(oassign(conf, headers), body, done);
                     });
                 },
                 subscribe : function (headers, messageListener) {
