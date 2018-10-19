@@ -48,7 +48,7 @@ module.exports = function setup(options, imports, register) {
                 },
                 subscribe : function (headers, messageListener) {
                     if (typeof headers == 'function') {
-                        messageListener = headers;
+                        messageListener = headers;//must be the listener
                         headers = {};
                     }
                     function _subscribe() {
