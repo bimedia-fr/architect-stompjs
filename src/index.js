@@ -46,20 +46,28 @@ module.exports = function setup(options, imports, register) {
                         channel.send(oassign(conf, headers), body, cb);
                     });
                 },
-                subscribe : function (headers, done) {
+                subscribe : function (headers, messageListener) {
                     if (typeof headers == 'function') {
                         done = headers;
                         headers = {};
                     }
-                    channelFactory.channel((err, channel) => {
-                        if (err) {
-                            log.error('unable to create channel', err);
-                            return done(err);
-                        }
-                        channel.subscribe(oassign(conf, headers), (err, message, subscription) => {
-                            done(err, message, channel, subscription);
+                    function _subscribe() {
+                        log.info('subscribing to', curr);
+                        channelFactory.channel((err, channel) => {
+                            if (err) {
+                                log.error('unable to create channel', err);
+                                return;
+                            }
+                            channel.subscribe(oassign(conf, headers), (err, message, subscription) => {
+                                if (err) {
+                                    log.error('subscribe error: ', err);
+                                    return setTimeout(_subscribe); // on error consider channel dead.
+                                }
+                                messageListener(message, channel, subscription);
+                            });
                         });
-                    });
+                    }
+                    _subscribe();
                 }
             };
             return prev;
