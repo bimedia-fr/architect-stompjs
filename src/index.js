@@ -33,9 +33,9 @@ module.exports = function setup(options, imports, register) {
             var conf = confs[curr];
             prev[curr] = {
                 send: function (headers, body, done) {
-                    if (typeof body == 'function' || !body) {
-                        body = headers;
+                    if (typeof body == 'function') {
                         done = body;
+                        body = headers;
                         headers = {};
                     }
                     channelFactory.channel((err, channel) => {
