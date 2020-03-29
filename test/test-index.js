@@ -1,8 +1,5 @@
-/*jslint node : true, nomen: true, plusplus: true, vars: true, eqeq: true,*/
-"use strict";
-var net = require('net'),
-    stomp = require('..'),
-    vows = require('vows'),
+
+var stomp = require('..'),
     assert = require('assert'),
     logger = require('./fake-logger');
 
@@ -32,43 +29,66 @@ var config = {
     }
 };
 
-function assertFunc(name) {
-    return function (topics) {
-        assert.ok(topics.stores[name]);
-        assert.ok(typeof topics.stores[name] == 'function');
-    };
-}
+function assertFunc(dest, name) {
+    assert.ok(dest.stores[name]);
+    assert.ok(typeof dest.stores[name] == 'function');
+};
+describe('architect stompjs', function () {
+    describe('A stompjs service', function () {
+        it('should return a valid object', function (done) {
+            stomp(config, {log : logger}, function (err, service) {
+                assert.ifError(err);
+                assert.ok(service.stomp.topics);
+                assert.ok(service.stomp.queues);
+                done();
+            });
+        });
+    });
+    describe('a topic', function(){
+        it('should return a `store` object', function (done) {
+            stomp(config, {log : logger}, function (err, service) {
+                assert.ifError(err);
+                assert.ok(service.stomp.topics.stores);
+                done();
+            });
+        });
+        it('should return a valid object with send method', function (done) {
+            stomp(config, {log : logger}, function (err, service) {
+                assert.ifError(err);
+                assertFunc(service.stomp.topics, 'send')
+                done();
+            });
+        });
+        it('should return a valid object with subscribe method', function (done) {
+            stomp(config, {log : logger}, function (err, service) {
+                assert.ifError(err);
+                assertFunc(service.stomp.topics, 'subscribe')
+                done();
+            });
+        });
+    });
+    describe('a queue', function () {
+        it('should return a `store` object', function (done) {
+            stomp(config, {log : logger}, function (err, service) {
+                assert.ifError(err);
+                assert.ok(service.stomp.queues.stores);
+                done();
+            });
+        });
+        it('should return a valid object with send method', function (done) {
+            stomp(config, {log : logger}, function (err, service) {
+                assert.ifError(err);
+                assertFunc(service.stomp.queues, 'send')
+                done();
+            });
+        });
+        it('should return a valid object with subscribe method', function (done) {
+            stomp(config, {log : logger}, function (err, service) {
+                assert.ifError(err);
+                assertFunc(service.stomp.queues, 'subscribe')
+                done();
+            });
+        });
 
-vows.describe("Architect Stomp Client service").addBatch({
-    'A stompjs service ': {
-        topic: function () {
-            return stomp(config, {log : logger}, this.callback);
-        },
-        'has a `topics` object ': function (service) {
-            assert.ok(service.stomp.topics);
-        },
-        'has a `queues` object ': function (service) {
-            assert.ok(service.stomp.topics);
-        },
-        'topics ': {
-            topic: function (service) {
-                return service.stomp.topics;
-            },
-            'contains a `stores` topic' : function (topics) {
-                assert.ok(topics.stores);
-            },
-            'have a `send` method': assertFunc('send'),
-            'have a `subscribe` method': assertFunc('subscribe')
-        },
-        'queues ': {
-            topic: function (service) {
-                return service.stomp.queues;
-            },
-            'contains a `stores` queue' : function (topics) {
-                assert.ok(topics.stores);
-            },
-            'have a `send` method': assertFunc('send'),
-            'have a `subscribe` method': assertFunc('subscribe')
-        }
-    }
-}).exportTo(module);
+    });
+});

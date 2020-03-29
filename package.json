@@ -7,7 +7,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "vows --spec test/test-*.js"
+    "test": "mocha test/test-*.js"
   },
   "repository": {
     "type": "git",
@@ -23,10 +23,9 @@
     "url": "https://github.com/bimedia-fr/architect-stompjs/issues"
   },
   "devDependencies": {
-    "vows": "~0.7.0"
+    "mocha": "^7.1.1"
   },
   "dependencies": {
-    "object-assign": "^4.0.1",
     "stompit": "0.25.0"
   },
   "plugin": {

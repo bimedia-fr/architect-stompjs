@@ -1,7 +1,6 @@
 /*jslint node : true, nomen: true, plusplus: true, vars: true, eqeq: true,*/
 "use strict";
-var stompit = require('stompit'),
-    oassign = require('object-assign');
+var stompit = require('stompit');
 
 
 //### Stompjs Module
@@ -43,7 +42,7 @@ module.exports = function setup(options, imports, register) {
                             log.error('unable to create channel', err);
                             return done(err);
                         }
-                        channel.send(oassign(conf, headers), body, done);
+                        channel.send(Object.assign(conf, headers), body, done);
                     });
                 },
                 subscribe : function (headers, messageListener) {
@@ -58,7 +57,7 @@ module.exports = function setup(options, imports, register) {
                                 log.error('unable to create channel', err);
                                 return;
                             }
-                            channel.subscribe(oassign(conf, headers), (err, message, subscription) => {
+                            channel.subscribe(Object.assign(conf, headers), (err, message, subscription) => {
                                 if (err) {
                                     log.error('subscribe error: ', err);
                                     return setTimeout(_subscribe); // on error consider channel dead.
