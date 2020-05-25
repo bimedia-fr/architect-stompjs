@@ -60,7 +60,10 @@ module.exports = function setup(options, imports, register) {
                             channel.subscribe(Object.assign(conf, headers), (err, message, subscription) => {
                                 if (err) {
                                     log.error('subscribe error: ', err);
-                                    return setTimeout(_subscribe); // on error consider channel dead.
+                                    if (conf.autoResubscribe !== false) {
+                                        setTimeout(_subscribe); // on error consider channel dead.
+                                    }
+                                    return;
                                 }
                                 messageListener(message, channel, subscription);
                             });
