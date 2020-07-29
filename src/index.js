@@ -18,7 +18,7 @@ module.exports = function setup(options, imports, register) {
     // Log connection events
     connections.on('connecting', function (connector) {
         var address = connector.serverProperties.remoteAddress.transportPath;
-        log.info('Connecting to', address);
+        log.debug('Connecting to', address);
     });
 
     connections.on('error', function (error) {
