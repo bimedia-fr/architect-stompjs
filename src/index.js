@@ -1,5 +1,3 @@
-/*jslint node : true, nomen: true, plusplus: true, vars: true, eqeq: true,*/
-"use strict";
 var stompit = require('stompit');
 
 

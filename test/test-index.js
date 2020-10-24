@@ -1,30 +1,29 @@
-
 var stomp = require('..'),
     assert = require('assert'),
     logger = require('./fake-logger');
 
 var config = {
     config: [{
-        'host': 'localhost',
-        'port': 61613,
-        'connectHeaders': {
-            'host': '/',
+        host: 'localhost',
+        port: 61613,
+        connectHeaders: {
+            host: '/',
             'heart-beat': '5000,5000',
             'client-id': 'myid'
         }
     }],
     topics: {
-        stores : {
-            'destination': '/topic/bimedia.stores.topic.preprod',
-            'ack': 'client',
+        stores : {
+            destination: '/topic/bimedia.stores.topic.preprod',
+            ack: 'client',
             'activemq.retroactive' : true,
             persistent: true
         }
     },
     queues: {
-        stores : {
-            'destination': '/queue/bimedia.stores.topic.preprod',
-            'ack': 'client'
+        stores : {
+            destination: '/queue/bimedia.stores.topic.preprod',
+            ack: 'client'
         }
     }
 };
@@ -32,7 +31,7 @@ var config = {
 function assertFunc(dest, name) {
     assert.ok(dest.stores[name]);
     assert.ok(typeof dest.stores[name] == 'function');
-};
+}
 describe('architect stompjs', function () {
     describe('A stompjs service', function () {
         it('should return a valid object', function (done) {
@@ -55,14 +54,14 @@ describe('architect stompjs', function () {
         it('should return a valid object with send method', function (done) {
             stomp(config, {log : logger}, function (err, service) {
                 assert.ifError(err);
-                assertFunc(service.stomp.topics, 'send')
+                assertFunc(service.stomp.topics, 'send');
                 done();
             });
         });
         it('should return a valid object with subscribe method', function (done) {
             stomp(config, {log : logger}, function (err, service) {
                 assert.ifError(err);
-                assertFunc(service.stomp.topics, 'subscribe')
+                assertFunc(service.stomp.topics, 'subscribe');
                 done();
             });
         });
@@ -78,14 +77,14 @@ describe('architect stompjs', function () {
         it('should return a valid object with send method', function (done) {
             stomp(config, {log : logger}, function (err, service) {
                 assert.ifError(err);
-                assertFunc(service.stomp.queues, 'send')
+                assertFunc(service.stomp.queues, 'send');
                 done();
             });
         });
         it('should return a valid object with subscribe method', function (done) {
             stomp(config, {log : logger}, function (err, service) {
                 assert.ifError(err);
-                assertFunc(service.stomp.queues, 'subscribe')
+                assertFunc(service.stomp.queues, 'subscribe');
                 done();
             });
         });
