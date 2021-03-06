@@ -1,25 +1,39 @@
 var stompit = require('stompit');
 
 
-//### Stompjs Module
+// ### Stompjs Module
 module.exports = function setup(options, imports, register) {
 
-    var log = imports.log.getLogger('stomp'),
+    let log = imports.log.getLogger('stomp'),
         config = options.config;
-    var servers = Array.isArray(config) ? config : [];
-    var recoOpts = config.reconnectOptions || {
-        'maxReconnects': 10
+    let servers = Array.isArray(config) ? config : [];
+    let recoOpts = config.reconnectOptions || {
+        maxReconnects: 10
     };
+    let clients = [];
+    let manager = new stompit.ConnectFailover(servers, recoOpts);
 
-    var connections = new stompit.ConnectFailover(servers, recoOpts);
+    function _removeclient(client) {
+        const index = clients.indexOf(client);
+        if (index > -1) {
+            clients.splice(index, 1);
+        }
+        return client;
+    }
 
     // Log connection events
-    connections.on('connecting', function (connector) {
-        var address = connector.serverProperties.remoteAddress.transportPath;
+    manager.on('connecting', function (server) {
+        var address = server.serverProperties.remoteAddress.transportPath;
         log.debug('Connecting to', address);
     });
 
-    connections.on('error', function (error) {
+    // Log connection events
+    manager.on('connect', function (server) {
+        var address = server.serverProperties.remoteAddress.transportPath;
+        log.debug('Connected to', address);
+    });
+
+    manager.on('error', function (error) {
         var connectArgs = error.connectArgs;
         var address = connectArgs.host + ':' + connectArgs.port;
         log.warn('Connection error to', address, ':', error.message);
@@ -35,35 +49,44 @@ module.exports = function setup(options, imports, register) {
                         body = headers;
                         headers = {};
                     }
-                    channelFactory.channel((err, channel) => {
+                    manager.connect((err, client /* , reconnect*/) => {
                         if (err) {
-                            log.error('unable to create channel', err);
+                            log.error('unable to create client ' + err.message, err);
                             return done(err);
                         }
-                        channel.send(Object.assign(conf, headers), body, done);
+                        client.on('error', (error) => {
+                            log.error('stomp client error ' + error.message);
+                        });
+                        client.send(Object.assign(conf, headers), body, (err, res) => {
+                            client.disconnect();
+                            done(err, res);
+                        });
                     });
                 },
                 subscribe : function (headers, messageListener) {
                     if (typeof headers == 'function') {
-                        messageListener = headers;//must be the listener
+                        messageListener = headers;// must be the listener
                         headers = {};
                     }
                     function _subscribe() {
                         log.info('subscribing to', curr);
-                        channelFactory.channel((err, channel) => {
+                        manager.connect((err, client, reconnect) => {
                             if (err) {
-                                log.error('unable to create channel', err);
-                                return;
+                                log.error('unable to create client ' + err.message, err);
+                                return ;
                             }
-                            channel.subscribe(Object.assign(conf, headers), (err, message, subscription) => {
+                            clients.push(client);
+                            client.on('error', (error) => {
+                                this.log.error('stomp client error ' + error.message);
+                                reconnect();
+                            });
+                            client.subscribe(Object.assign(conf, headers), (err, message, subscription) => {
                                 if (err) {
                                     log.error('subscribe error: ', err);
-                                    if (conf.autoResubscribe !== false) {
-                                        setTimeout(_subscribe); // on error consider channel dead.
-                                    }
-                                    return;
+                                    _removeclient(client).disconnect();
+                                    return setTimeout(_subscribe); // on error consider channel dead.
                                 }
-                                messageListener(message, channel, subscription);
+                                messageListener(message, client, subscription);
                             });
                         });
                     }
@@ -74,16 +97,16 @@ module.exports = function setup(options, imports, register) {
         }, {});
     }
 
-    var channelFactory = new stompit.ChannelFactory(connections);
-
     register(null, {
         stomp: {
-            queues : destinations(channelFactory, options.queues || {}),
-            topics : destinations(channelFactory, options.topics || {})
+            queues : destinations(manager, options.queues || {}),
+            topics : destinations(manager, options.topics || {})
         },
-        onDestroy: function (callback) {
-            channelFactory.close();
-            return callback && callback();
+        onDestroy: function (done) {
+            clients.forEach((client) => {
+                client.disconnect();
+            });
+            return done && done();
         }
     });
 };
