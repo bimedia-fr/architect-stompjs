@@ -77,7 +77,7 @@ module.exports = function setup(options, imports, register) {
                             }
                             clients.push(client);
                             client.on('error', (error) => {
-                                this.log.error('stomp client error ' + error.message);
+                                log.error('stomp client error ' + error.message);
                                 reconnect();
                             });
                             client.subscribe(Object.assign(conf, headers), (err, message, subscription) => {
