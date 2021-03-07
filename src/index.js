@@ -55,7 +55,7 @@ module.exports = function setup(options, imports, register) {
                             return done(err);
                         }
                         client.on('error', (error) => {
-                            log.error('stomp client error ' + error.message);
+                            log.debug('stomp client error ' + error.message);
                         });
                         client.send(Object.assign(conf, headers), body, (err, res) => {
                             client.disconnect();
@@ -70,21 +70,23 @@ module.exports = function setup(options, imports, register) {
                     }
                     function _subscribe() {
                         log.info('subscribing to', curr);
-                        manager.connect((err, client, reconnect) => {
+                        manager.connect((err, client) => {
                             if (err) {
                                 log.error('unable to create client ' + err.message, err);
                                 return ;
                             }
-                            clients.push(client);
+                            function reconnect() {
+                                _removeclient(client).disconnect();
+                                return setTimeout(_subscribe);
+                            }
                             client.on('error', (error) => {
-                                log.error('stomp client error ' + error.message);
+                                log.debug('stomp client error ' + error.message);
                                 reconnect();
                             });
                             client.subscribe(Object.assign(conf, headers), (err, message, subscription) => {
                                 if (err) {
                                     log.error('subscribe error: ', err);
-                                    _removeclient(client).disconnect();
-                                    return setTimeout(_subscribe); // on error consider channel dead.
+                                    return reconnect(); // on error consider channel dead.
                                 }
                                 messageListener(message, client, subscription);
                             });
