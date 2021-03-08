@@ -57,7 +57,7 @@ module.exports = function setup(options, imports, register) {
                         client.on('error', (error) => {
                             log.debug('stomp client error ' + error.message);
                         });
-                        client.send(Object.assign(conf, headers), body, (err, res) => {
+                        client.sendString(Object.assign(conf, headers), body, {}, (err, res) => {
                             client.disconnect();
                             done(err, res);
                         });
