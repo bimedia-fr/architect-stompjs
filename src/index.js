@@ -19,7 +19,7 @@ module.exports = function setup(options, imports, register) {
             }
             dns.resolveSrv('_stomp._tcp.' + options.srv.name, (err, results) => {
                 let servers = results.map((res) => Object.assign({host: res.name, port: res.port}, options.srv.opts));
-                let recoOpts = options.config.reconnectOptions || { maxReconnects: 10 };
+                let recoOpts = (options.config && options.config.reconnectOptions) || { maxReconnects: 10 };
                 return resolve(new stompit.ConnectFailover(servers, recoOpts));
             });
         });
