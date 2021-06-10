@@ -27,6 +27,24 @@ npm install --save architect-stompjs
 
 Config element is an array of servers as in [stompit connection servers](http://gdaws.github.io/node-stomp/api/connect-failover/).
 
+#### srv
+
+Aternatively, specify a SRV dns name to lookup hosts and ports from DNS.
+
+```js
+{
+  "packagePath": "architect-stompjs",
+  srv: {
+    name: 'activemq.example.com'
+    opts: {
+      connectHeaders: {
+          'heart-beat': '25000,25000'
+      }
+    }
+  }
+}
+```
+
 #### queues
 
 Add a `queues` object to configure queues avaliable in your application.
